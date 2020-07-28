@@ -664,3 +664,147 @@ function MC_Horizontal(r::Float64,L::Float64,h::Float64,segR::Float64)
     savefig("Grounding_Grid_Design.pdf");
     return CONDX, CONDY, CONDZ, Node, A, S
 end
+#Function that generate grounding composed of vertical rods only
+function MC_Vertical_Rods(r::Float64,haste::Float64,n_haste::Int64,distX::Float64,h::Float64,segR::Float64)
+    ny = floor(Int, haste/(segR)); #Número de segmentações de cada "eletrodo"
+	n = n_haste*ny;
+	CONDX = Array{Float64}(undef,n,2); #inicialização posicao do vetor x
+    CONDY = Array{Float64}(undef,n,2); #inicialização posicao do vetor y
+    CONDZ = Array{Float64}(undef,n,2); #inicialização posicao do vetor z
+    Nos = Array{Int64}(undef,n,2); #inicialização posicao dos nós que conectam cada segmento
+    Node = Array{Int64}(undef,n_haste,2);
+    Nos = Array{Int64}(undef,n,2);
+    Last_node = 1; #inicializando variável que computa o último nó do Loop
+	Δy = haste/ny;
+	mm = 1;
+	for col = 1:n_haste
+		posx = (col-1)*distX;
+		posy = h;
+		posz = 0.0;
+		for linha = 1:ny
+			CONDY[mm,1] = posy;
+			posy = posy + Δy
+			CONDY[mm,2] = posy;
+			CONDX[mm,1] = posx; CONDX[mm,2] = posx;
+			CONDZ[mm,1] = posz;	CONDZ[mm,2] = posz;
+			Nos[mm,1] = mm + col - 1;
+			Nos[mm,2] = mm + col;
+			if linha == 1
+				Node[col,1] = Nos[mm,1]
+			end
+			if linha == ny
+				Node[col,2] = Nos[mm,2]
+			end
+			mm = mm + 1;
+		end
+	end
+	Last_node = Nos[end,2] + 1;
+    #MATRIZES DE CONECTIVIDADE
+    A = zeros(n,Last_node - 1);
+    S = zeros(n,Last_node - 1);
+
+    for linha = 1:length(CONDX[:,1]) #NUMERO DE ELETRODOS
+        A[linha,Nos[linha,1]] = 0.5;
+        S[linha,Nos[linha,1]] = 1.0;
+        A[linha,Nos[linha,2]] = 0.5;
+        S[linha,Nos[linha,2]] = -1.0;
+    end
+    #=writedlm("CONDX.csv",CONDX,',');
+    writedlm("CONDY.csv",CONDY,',');
+    writedlm("CONDZ.csv",CONDZ,',');
+    writedlm("Node.csv",Node,',');
+    writedlm("A.csv",A,',');
+    writedlm("S.csv",S,',');=#
+
+    plot([CONDX[:,1]' CONDX[end,2]]',-[CONDY[:,1]' CONDY[end,2]]',linestyle =
+        :dot,seriestype=:scatter,title="Grounding Grid",legend = false, aspect_ratio = 1);
+    savefig("Grounding_Grid_Design.pdf");
+    return CONDX, CONDY, CONDZ, Node, A, S
+end
+#Function that generate the Distribution Line Grounding (CEMIG)
+function MC_Dist_Line(r::Float64,n_haste::Int64,h::Float64,segR::Float64)
+	haste = 2.5; #Vertical Rod Length
+	distX = 3.0; #Horizontal Rod Length
+	Lx = (n_haste-1)*distX;
+    ny = floor(Int, haste/(segR)); #Número de segmentações de cada "eletrodo"
+	nx = floor(Int, Lx/(segR));
+	n = nx + n_haste*ny;
+	CONDX = Array{Float64}(undef,n,2); #inicialização posicao do vetor x
+    CONDY = Array{Float64}(undef,n,2); #inicialização posicao do vetor y
+    CONDZ = Array{Float64}(undef,n,2); #inicialização posicao do vetor z
+    Nos = Array{Int64}(undef,n,2); #inicialização posicao dos nós que conectam cada segmento
+    Node = Array{Int64}(undef,n_haste,2);
+    Nos = Array{Int64}(undef,n,2);
+    Last_node = 1; #inicializando variável que computa o último nó do Loop
+	Δx = Lx/nx;
+	Δy = haste/ny;
+	mm = 1; posz = 0.0;
+	#Vertical Rods
+	for col = 1:n_haste
+		posx = (col-1)*distX;
+		posy = h;
+		for linha = 1:ny
+			CONDY[mm,1] = posy;
+			posy = posy + Δy
+			CONDY[mm,2] = posy;
+			CONDX[mm,1] = posx; CONDX[mm,2] = posx;
+			CONDZ[mm,1] = posz;	CONDZ[mm,2] = posz;
+			Nos[mm,1] = mm + col - 1;
+			Nos[mm,2] = mm + col;
+			if linha == 1
+				Node[col,1] = Nos[mm,1]
+			end
+			if linha == ny
+				Node[col,2] = Nos[mm,2]
+			end
+			mm = mm + 1;
+		end
+	end
+	Last_node = Nos[mm-1,2] + 1;
+	#Horizontal Rods
+	posx = 0.0;
+	Comp = 0.0; mmm = 1;
+	for linha = 1:nx
+		CONDY[mm,1] = h; CONDY[mm,2] = h;
+		CONDX[mm,1] = posx; posx = posx + Δx;
+		CONDX[mm,2] = posx;
+		CONDZ[mm,1] = posz;	CONDZ[mm,2] = posz;
+		if abs(Comp - posx + Δx) < Δx
+			Nos[mm,1] = Node[mmm,1]; mmm = mmm + 1;
+			Comp = Comp + distX;
+			if linha > 1
+				Nos[mm - 1, 2] = Nos[mm,1];
+			end
+		else
+			Nos[mm,1] = Last_node; Last_node = Last_node + 1;
+		end
+		if linha == nx
+			Nos[mm,2] = Node[mmm,1];
+		else
+			Nos[mm,2] = Last_node;
+		end
+		mm = mm + 1;
+	end
+	# Last_node = Nos[end,2] + 1;
+    #MATRIZES DE CONECTIVIDADE
+    A = zeros(n,Last_node - 1);
+    S = zeros(n,Last_node - 1);
+
+    for linha = 1:length(CONDX[:,1]) #NUMERO DE ELETRODOS
+        A[linha,Nos[linha,1]] = 0.5;
+        S[linha,Nos[linha,1]] = 1.0;
+        A[linha,Nos[linha,2]] = 0.5;
+        S[linha,Nos[linha,2]] = -1.0;
+    end
+    #=writedlm("CONDX.csv",CONDX,',');
+    writedlm("CONDY.csv",CONDY,',');
+    writedlm("CONDZ.csv",CONDZ,',');
+    writedlm("Node.csv",Node,',');
+    writedlm("A.csv",A,',');
+    writedlm("S.csv",S,',');=#
+
+    plot([CONDX[:,1]' CONDX[end,2]]',-[CONDY[:,1]' CONDY[end,2]]',linestyle =
+        :dot,seriestype=:scatter,title="Grounding Grid",legend = false, aspect_ratio = 1);
+    savefig("Grounding_Grid_Design.pdf");
+    return CONDX, CONDY, CONDZ, Node, A, S, Nos
+end
