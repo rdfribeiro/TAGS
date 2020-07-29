@@ -39,7 +39,7 @@ end
 X = string(now());#string used to save the data
 mkdir("Results_"*X[1:13]*X[15:16]) #creating directory to save data
 cd(pwd()*"/Results_"*X[1:13]*X[15:16])
-Nome = string(convert(Int64, ρ))*"_"* string(convert(Int64, L));
+Nome = string(convert(Int64, ρ))*"_"* string(convert(Int64, n_hastes));
 plot(freq,abs.(Z1), label = "Begining", xscale = :log10, linecolor = :black,lw = 2,xlabel = "Frequency [Hz]",ylabel = "|z(ω)|");
 plot!(freq,abs.(Z2), label = "Middle", xscale = :log10, linecolor = :red,lw = 2,xlabel = "Frequency [Hz]",ylabel = "|z(ω)|");
 plot!(freq,abs.(Z3), label = "Ending", xscale = :log10, linecolor = :yellow,linestyle = :dash,lw = 2,xlabel = "Frequency [Hz]",ylabel = "|z(ω)|");
