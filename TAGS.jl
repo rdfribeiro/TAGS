@@ -274,6 +274,105 @@ function MHEM(ro::Float64,epsr::Float64,rf::Float64,CONDUTORESx,CONDUTORESy,COND
     Ynodal[:,:] = (transpose(A)/(Zt))*A + (transpose(S)/(Zl))*S;
     return Ynodal;
 end
+"""
+Contribution from Fernando Lima Viana Costa
+PotencialConstante(ρ::Float64,rf::Float64,CONDUTORESx::Array{Float64,2},CONDUTORESy::Array{Float64,2},CONDUTORESz::Array{Float64,2},nInt::Int64)
+
+Calcula a impedância equivalente de uma estrutura de aterramento utilizando o método do
+potencial constante
+
+## Entradas
+1. ρ: resistividade do solo
+2. raio: raio dos eletrodos do aterramento
+3. CONDUTORESx: matriz contendo as coordenadas na direção x inicial [1] e final [2] de cada
+eletrodo do aterramento
+4. CONDUTORESy: análogo a CONDUTORESx, para as coordenadas da direção y
+5. CONDUTORESz: análogo a CONDUTORESx, para as coordenadas da direção z
+6. nInt: número de pontos de integração
+
+## Saídas
+A resistência equivalente da estrutura de aterramento.
+
+"""
+function PotencialConstante(ρ::Float64,rf::Float64,
+                            CONDUTORESx::Array{Float64,2},
+                            CONDUTORESy::Array{Float64,2},
+                            CONDUTORESz::Array{Float64,2},
+                            nInt::Int64)
+    #variáveis eletromagnéticas
+    #μ0 = 4*pi*10^-7;
+    #ϵ0 = 8.854*10^-12;
+    #σ = 1/ro;
+    #variaveis espaciais e inicialização de variaveis
+    nseg = size(CONDUTORESx,1);
+    Rnm = zeros(nseg,nseg);
+    #Pesos do Gauss Legandre
+	if rem(nInt,2) != 0
+		nInt = nInt + 1;
+	end
+    tgl1, Agl1 = Pesos_GL(nInt);
+    ntgl2 = Int(round(nInt/4));
+    #ensuring it is even number
+    if rem(ntgl2,2) != 0
+        ntgl2 = ntgl2 + 1;
+    end
+    tgl2, Agl2 = Pesos_GL(ntgl2);
+    ntgl1 = length(tgl1);
+
+    #Loop principal
+    Tal_rt = 1;
+
+    for line = 1:(nseg)
+        XR0 = CONDUTORESx[line,1]; XR1 = CONDUTORESx[line,2];
+        YR0 = CONDUTORESy[line,1]; YR1 = CONDUTORESy[line,2];
+        ZR0 = CONDUTORESz[line,1]; ZR1 = CONDUTORESz[line,2];
+
+        for colum = line:(nseg)
+            XS0 = CONDUTORESx[colum,1]; XS1 = CONDUTORESx[colum,2]; XSmed = (XS0 + XS1)/2;
+            YS0 = CONDUTORESy[colum,1]; YS1 = CONDUTORESy[colum,2]; YSmed = (YS0 + YS1)/2;
+            ZS0 = CONDUTORESz[colum,1]; ZS1 = CONDUTORESz[colum,2]; ZSmed = (ZS0 + ZS1)/2;
+
+            aux1r = 0.; aux1i = 0.;
+            if line == colum
+                ntgl = ntgl1;
+                tgl = tgl1;
+                Agl = Agl1;
+            else
+                ntgl = ntgl2;
+                tgl = tgl2;
+                Agl = Agl2;
+            end
+            for lin = 1:ntgl
+                aux2r = 0.; aux2i = 0.;
+
+                xfonte = (XS0+XS1)/2+((-XS0+XS1))/2*tgl[lin];
+                yfonte = (YS0+YS1)/2+((-YS0+YS1))/2*tgl[lin];
+                zfonte = (ZS0+ZS1)/2+((-ZS0+ZS1))/2*tgl[lin];
+                yfontei = (-(YS0+YS1))/2+((-(-YS0+YS1)))/2*tgl[lin];
+                for col = 1:ntgl
+                    XR0ece = (XR0+XR1)/2+((-XR0+XR1))/2*tgl[col];
+                    YR1ece = (YR0+YR1)/2+((-YR0+YR1))/2*tgl[col];
+                    zrece = (ZR0+ZR1)/2+((-ZR0+ZR1))/2*tgl[col];
+
+                    rreal = sqrt((xfonte-XR0ece)^2+(yfonte-YR1ece)^2+(abs(zfonte-zrece) + rf)^2);
+                    rimag = sqrt((xfonte-XR0ece)^2+(yfontei-YR1ece)^2+(abs(zfonte-zrece) + rf)^2);
+
+                    funcaor = 1/rreal;
+                    funcaoi = 1/rimag;
+
+                    aux2r = aux2r + Agl[col]*funcaor;
+                    aux2i = aux2i + Agl[col]*funcaoi;
+                end
+                aux1r = aux1r + Agl[lin]*aux2r;
+                aux1i = aux1i + Agl[lin]*aux2i;
+            end
+            ∫ = 0.25*(aux1r + Tal_rt*aux1i);
+            Rnm[line,colum] = ∫*ρ/(4*pi); 
+            Rnm[colum,line] = Rnm[line,colum];
+        end
+    end
+    return inv(sum(inv(Rnm)));
+end
 #Grid Data Generator
 #Function that generate the counterpoise data
 function MC_Torre(r::Float64,L::Float64,h::Float64,segR::Float64)
