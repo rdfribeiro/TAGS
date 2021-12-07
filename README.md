@@ -14,3 +14,6 @@ Example 5 --> Compare Typical Distribution Grounding System when lightning is co
 
 Time Domain
 Example 4 --> Compare HEM and MHEM for a horizontal electrode, when excited by a lighting current.
+
+Potential Constant Method
+Example MPC --> Compare HEM with Potential Constant Method (low frequency). --> Contribution from Fernando Lima Viana Costa
