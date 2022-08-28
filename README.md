@@ -17,3 +17,6 @@ Example 4 --> Compare HEM and MHEM for a horizontal electrode, when excited by a
 
 Potential Constant Method
 Example MPC --> Compare HEM with Potential Constant Method (low frequency). --> Contribution from Fernando Lima Viana Costa
+
+Transmission Line Modeling
+Example GLM --> Compare HEM with another grounding modeling based on Transmission Line Modeling.
