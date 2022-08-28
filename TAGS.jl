@@ -907,3 +907,37 @@ function MC_Dist_Line(r::Float64,n_haste::Int64,h::Float64,segR::Float64)
     savefig("Grounding_Grid_Design.pdf");
     return CONDX, CONDY, CONDZ, Node, A, S, Nos
 end
+#Function that consider line modeling in a 4 counterpoise grounding
+function GLM(h::Float64, d::Float64, l::Float64, r::Float64, ro::Float64, epsr::Float64, freq::Float64, SoilParameter::String)
+    eps0 = 8.854e-12; Ynodal = zeros(2,2)
+    mi0 = 4*pi*10^-7;
+    K = (log(2*l/sqrt(2*r*h))-1);
+    Km = (log(2*l/sqrt(2*d*h))-1);
+    if SoilParameter == "Alipio"
+		ro, epsr = ps_alipio(ro,freq);
+	end
+    w = 2*pi*freq; Sig = 1/ro;
+    Zl = 1im*w*mi0/(2*pi)*K;
+    Yt = pi*(Sig+1im*w*(epsr+1)*eps0)*K^-1;
+    Zc = sqrt(Zl/Yt);
+    
+    Zlm = 1im*w*mi0/(2*pi)*Km;
+    Ytm = pi*(Sig+1im*w*(epsr+1)*eps0)*Km^-1;
+    Zcm = sqrt(Zlm/Ytm);
+    
+    Gama = sqrt(Zl*Yt);
+    Zceq = (Zc +Zcm)/4;
+    
+    Z_w(linha) = Zceq*coth(Gama*l);
+    
+    H = exp(-l*Gama);
+    Yc = 1/(Zceq);
+    
+    Y11 = Yc*(1+H*H)*1/(1-H*H);
+    Y12 = -2*Yc*H*1/(1-H*H);
+    Y22 = Y11;
+    Y21 = Y12;
+
+    Ynodal = [Y11 Y12; Y21 Y22];
+    return Ynodal
+end
