@@ -908,7 +908,7 @@ function MC_Dist_Line(r::Float64,n_haste::Int64,h::Float64,segR::Float64)
     return CONDX, CONDY, CONDZ, Node, A, S, Nos
 end
 #Function that consider line modeling in a 4 counterpoise grounding
-function GLM(h::Float64, d::Float64, l::Float64, r::Float64, ro::Float64, epsr::Float64, freq::Float64, SoilParameter::String)
+function GLM(h::Float64, d::Float64, l::Float64, r::Float64, ro::Float64, epsr::Float64, freq, SoilParameter::String)
     eps0 = 8.854e-12; Ynodal = zeros(2,2)
     mi0 = 4*pi*10^-7;
     K = (log(2*l/sqrt(2*r*h))-1);
