@@ -4,9 +4,9 @@ using MAT
 using Dates
 using Plots
 #Configuring plot font
-font = Plots.font("Arial", 16)
-font2 = Plots.font("Arial", 16)
-pyplot(guidefont=font, xtickfont=font, ytickfont=font, legendfont=font2);
+#font = Plots.font("Arial", 16)
+#font2 = Plots.font("Arial", 16)
+#pyplot(guidefont=font, xtickfont=font, ytickfont=font, legendfont=font2);
 plot();
 
 #BEGIN -------------------------------------------------------------------------
