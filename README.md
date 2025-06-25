@@ -13,7 +13,8 @@ Example 3 --> Compare HEM and MHEM for a horizontal electrode;
 Example 5 --> Compare Typical Distribution Grounding System when lightning is considered in the begging or in the middle of the system.
 
 Time Domain
-Example 4 --> Compare HEM and MHEM for a horizontal electrode, when excited by a lighting current.
+Example 4 --> Compare HEM and MHEM for a horizontal electrode, when excited by a lighting current;
+Example 6 --> Compare HEM with the concept of impulsive impedance (ZP) on the lightning overvoltage of two vertical rods.
 
 Potential Constant Method
 Example MPC --> Compare HEM with Potential Constant Method (low frequency). --> Contribution from Fernando Lima Viana Costa
