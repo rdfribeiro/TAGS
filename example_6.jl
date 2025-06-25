@@ -55,13 +55,16 @@ plot!(10^6*t,10^-3*f_t_regenerada, label = "Regenerated Function", linecolor = :
 savefig("Injected_Current.png");
 nfreq = length(s); V_w = zeros(nfreq) + im*zeros(nfreq);
 ncores = Threads.nthreads(); #using paralel computing (number of cores)
+Fonte = zeros(Node[end,end],1); #current source (ensuring that 50% of the current go to each rod)
+Fonte[Node[1,1]] = 0.5;
+Fonte[Node[2,1]] = 0.5;
 println("Inicializating the so-called \"HEM\"")
 begin time_original = @elapsed Threads.@threads for linha = 1:nfreq
         Yn = HEM(ρ,ϵr,r,CONDX,CONDY,CONDZ,A,S,s[linha]/(2*pi),nInt,"");
         if Threads.threadid() == 1
             println("$(100.0*linha/nfreq*ncores) % concluído ... Aguarde")
         end
-        Z = (inv(Yn)[1,1]);
+        Z = ((inv(Yn)*Fonte)[1,1]); # obtaining the Z of the first point, corner
         V_w[linha] = Z*F_s[linha];
         global V_w
     end
@@ -80,4 +83,3 @@ println("The impulsive impedance is equal to: $ZP")
 cd(dirname(@__FILE__))
 println("\n");
 println("Total time (HEM): $(time_original)\n")
-
